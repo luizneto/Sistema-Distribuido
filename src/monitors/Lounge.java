@@ -14,7 +14,7 @@ public class Lounge {
     /**
      * Número de iterações do cliente
      */
-    private int nIterCustomer;
+    private int nCustomer;
 
     /**
      * Número de iterações do mecanico
@@ -97,7 +97,7 @@ public class Lounge {
    private Lounge(int[] queueCustomerWaitingAttending, int[] queueMechanicWaitingManager) {
 	super();
 	if(nCarsRepaired > 0) this.nCarsRepaired = nCarsRepaired;
-	if(nIterCustomer > 0)this.nIterCustomer = nIterCustomer;
+	if(nCustomer > 0)this.nCustomer = nCustomer;
 	if(nIterMechanic > 0)this.nIterMechanic = nIterMechanic;
 	if(nIterGeral > 0) this.nIterGeral = nIterGeral;
 
@@ -128,8 +128,15 @@ public class Lounge {
 		this.queueMechanicWaitingManager = queueMechanicWaitingManager;
 	}
 
+   public int getnCustomer() {
+		return nCustomer;
+	}
 
-   public int getNextTask() {
+	public void setnCustomer(int nCustomer) {
+		this.nCustomer = nCustomer;
+	}
+
+	public int getNextTask() {
 	     /* inicializar os estado interno */
 	   if(queueCustomerWaitingAttending.full()) {
 		   
@@ -139,6 +146,12 @@ public class Lounge {
 	   return 0;
 }
 
+   public int getCarId() {
+	   int car = 0;
+	   car = customer.getCustomerCarId();
+	   return car;
+   }
+   
    /**
     * Método que verifica quem será atendido pelo gerente
     * O gerente atende todos os clientes da fila e só depois atende os mecânicos

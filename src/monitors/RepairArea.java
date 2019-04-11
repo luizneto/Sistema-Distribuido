@@ -80,9 +80,16 @@ public class RepairArea {
 	/**
 	 *  Fila de espera (carros) aguardando o reparo
 	 *
-	 *    @serialField queueCar
+	 *    @serialField queueJob
 	 */
-	private MemFIFO queueCar;
+	private MemFIFO queueJob;
+
+	/**
+	 *  Fila de carros aguardando peça de substituição
+	 *
+	 *    @serialField queueCarRepaired
+	 */
+	private MemFIFO queueWaitCarPart;
 
 	/**
 	 *  Fila de carros já reparados
@@ -133,6 +140,7 @@ public class RepairArea {
 	 */
 	private Lounge lounge;
 
+	
 	/**
 	 * Instanciação do construtor da Área de reparo
 	 * 
@@ -163,11 +171,19 @@ public class RepairArea {
 
 		for (int i = 0; i < this.nCar; i++) 
 			stateMechanic[i] = SLEEPING;
-			queueCar = new MemFIFO (this.nWaitCarRepair);				//Entra na fila de carros a espera de reparo
+			queueJob = new MemFIFO (this.nWaitCarRepair);				//Entra na fila de carros a espera de reparo
 
 		/* inicializar o ficheiro de logging */
 		if ((fileName != null) && !("".equals (fileName))) this.fileName = fileName;
 			reportInitialStatus();
+	}
+
+	public MemFIFO getQueueWaitCarPart() {
+		return queueWaitCarPart;
+	}
+
+	public void setQueueWaitCarPart(MemFIFO queueWaitCarPart) {
+		this.queueWaitCarPart = queueWaitCarPart;
 	}
 
 	/**
@@ -222,71 +238,6 @@ public class RepairArea {
 		{ GenericIO.writelnString ("A operação de fechar o ficheiro " + fileName + " falhou!");
 		System.exit (1);
 		}
-	}
-
-	/**
-	 *  Operação de reparo do carro (originada pelo mecânico).
-	 *
-	 *    @return <li> true, se reparou o carro
-	 *            <li> false, se não reparou o carro
-	 */
-/*	public boolean goFixIt (int carId) { 
-		carId = customer.getCustomerCarId();                 // Passando a identificação do carro pelo cliente
-		int partId;											 // Identificação da peça
-		int mechanicId = -1;                                 // identificação do mecânico
-		boolean newMechanic = false;                         // sinalização de lançamento de um thread mecânico
-
-		synchronized (this) {                                // entrada no monitor área de reparo
-			stateCustomerCar[carId] = WAITREPAIRPARK;		 // Sinaliza que tem um carro em espera para reparo
-			reportStatus ();
-
-			if (queueCar.full ())                            // verifica se a fila de carros está cheia
-				return (false);                              // em caso afirmativo, não entra
-	
-			if (nMecOnFixIt < nMechanic) {                   // verifica se tem algum mecânico livre
-				newMechanic = true;                          // sinaliza a necessidade de acorda um mecânico
-			}
-			else {
-				stateCustomerCar[carId] = WAITTURN;          // Carro fica na espera de um mecânico
-				reportStatus ();
-				queueCar.write (Thread.currentThread ());    // Continua a esperar
-			}
-		}
-
-		synchronized (Thread.currentThread ()) {               					// Entrada no monitor mecânico
-			if (newMechanic)                                             		// Verifica se há necessidade de acordar um mecânico
-				new Mechanic (mechanicId, this).start ();     					// Acorda um mecânico
-				stateMechanic[mechanicId] = WORKING;         					// Mecânico está trabalhando
-				reportStatus ();
- 			    
-				Random random = new Random();
-				partId = random.nextInt(3); 									// Gera a peça a ser reparado, 
-
-				getRequeridPart(partId);										// Pede a peça para reparar o carro (recebe a peça pelo stock)
-				stateMechanic[mechanicId] = REQUERIDPART;         				// Mecânico vai buscar uma peça no stock
-				reportStatus ();
-				if(partAvailable(partId) == true) {								// Se tiver a peça no stock entra na condição
-					resumeRepairProcedure(carId, partId);						// Retorna ao reparo do carro
-					stateMechanic[mechanicId] = WORKING;         				// Mecânico está trabalhando
-					reportStatus ();					
-				}else {					
-					lounge.letManagerKnow(mechanicId, carId, partId);								// Fala com o gerente para solicitar a peça
-					stateMechanic[mechanicId] = REQUERINEWPART;         		// Mecânico está alertando o gerente que precisa de uma peça
-					reportStatus ();
-
-				}
-			try {
-				Thread.currentThread ().wait ();                 				// Aguarda a continuação das operações
-			}catch (InterruptedException e) {}
-		}
-		
-		return (true);                                       					// Retorna que o reparo está pronto
-	}
-*/
-	
-	public void resumeRepairProcedure(int partId) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/**
@@ -400,12 +351,12 @@ public class RepairArea {
 		  int carId = -1;                                 
 	      Customer carCustomer;                                   		// cliente
 	      
-	      if (queueCar.empty ()) {                            			// Verifica se existe algum carro na fila para reparo
+	      if (queueJob.empty ()) {                            			// Verifica se existe algum carro na fila para reparo
 	           stateMechanic[mechanicId] = SLEEPING;               		// Sinaliza que vai colocar o mecânico para dormir
 				reportStatus ();
 	         }
 	         else { 
-	        	 carCustomer = (Customer) queueCar.read ();            // 	        	 
+	        	 carCustomer = (Customer) queueJob.read ();            // 	        	 
 	        	 carId = customer.getCustomerCarId();
 	             stateMechanic[mechanicId] = GONEWFIXIT;        	   // Sinaliza que o mecânico vai começa um novo reparo
  				 reportStatus ();
@@ -434,10 +385,14 @@ public class RepairArea {
 		return servico;
 	}
 
-	public void registerService() {
-		// TODO Auto-generated method stub
-		
+	public void registerService(int carId) {
+		queueJob.write(carId);
 	}
+
 		
-	
+	public int resumeRepairProcedure(int partId) {
+		return partId;
+	}
+
+
 }

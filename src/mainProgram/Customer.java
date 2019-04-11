@@ -5,6 +5,9 @@
  */
 package mainProgram;
 
+/*Porta servidor grupo 7: 20170 à 20169*/
+
+
 import monitors.RepairArea;
 import monitors.OutSideWorld;
 import monitors.Park;
@@ -24,6 +27,13 @@ public class Customer extends Thread {
      * @serialField customerId
      */
     private int customerId;
+
+    /**
+     * Identificação do estado do cliente
+     *
+     * @serialField customerId
+     */
+    private int[] status;
 
     /**
      * Número de iterações do ciclo de vida do cliente
@@ -130,6 +140,14 @@ public class Customer extends Thread {
 		this.customerNotReplaceCar = customerNotReplaceCar;
 	}
 
+	public int[] getStatus() {
+		return status;
+	}
+
+	public void setStatus(int[] status) {
+		this.status = status;
+	}
+
 	/**
      * Ciclo de vida do thread cliente.
      */
@@ -153,10 +171,10 @@ public class Customer extends Thread {
     	}else {
     		oSWorld.backToWorkByBus(customerId);						//Cliente retorna ao mundo de ônibus
     		lounge.queueIn(customerCarId);								//Cliente entra na fila de espera para atendimento com o gerente
-    		lounge.payForTheService();									//
+    		lounge.payForTheService();									//*Cliente realiza o pagamento pelo serviço
     	}		
-   		park.collectCar(customerId);									//
-		oSWorld.backToWorkByCar(customerId, customerCarId);				//*Cliente retorna para o mundo com o carro substituto
+   		park.collectCar(customerId);									//*Cliente coleta seu carro reparado
+		oSWorld.backToWorkByCar(customerId, customerCarId);				//*Cliente retorna para o mundo com o carro substituto ou seu carro reparado
     }
     
 	/**

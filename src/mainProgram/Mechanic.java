@@ -71,13 +71,16 @@ public class Mechanic extends Thread{
            partId = rArea.startRepairProcedure();						//*Mecânico recebe a peça a ser substituida no carro
                park.getVehicle(carId);									//*Mecânico vai ao park buscar o carro para realizar o reparo
                if(rArea.partAvailable(partId)){							//Verifica se tem a peça no stock
-                   rArea.getRequiredPart(partId);						//Mecânico vai pega a peça
-                    rArea.resumeRepairProcedure(partId);				//*Mecânico volta com a peça e continua o reparo
+                    rArea.getRequiredPart(partId);						//Mecânico vai pega a peça
+                    rArea.resumeRepairProcedure(partId);				//Mecânico volta com a peça e continua o reparo
                     fixIt();											//Mecânico repara o carro
                     park.returnVehicle(carId, mechanicId);				//Mecânico retorna o carro já reparado ao park
                     rArea.repairConcluded(carId);						//**Mecânico alerta o gerente que o reparo está concluído
                 }
-                else lounge.letManagerKnow(mechanicId, partId);			//Mecânico entra na fila de espera para atendimento com o gerente            
+                else {
+                    rArea.getQueueWaitCarPart().write(carId);			//Adiciona o carro na fila de espera de peça
+                	lounge.letManagerKnow(mechanicId, partId);			//Mecânico entra na fila de espera para atendimento com o gerente            
+                }
        }
    }
 
